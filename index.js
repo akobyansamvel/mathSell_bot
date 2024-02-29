@@ -1,65 +1,72 @@
-
-require("dotenv").config();  
-const { Bot, Keyboard, GrammyError, HttpError, InputFile  } = require("grammy");
+require("dotenv").config();
+const { Bot, Keyboard, InlineKeyboard } = require("grammy");
 
 const bot = new Bot(process.env.BOT_API_KEY);
 
-//приветствие и кнопки с командами
+// Загрузка данных из JSON-файла
+const data = require('./data.json');
+
 bot.command('start', async (ctx) => {
     const startKeyboard = new Keyboard()
-        .text("Искать варианты")
+        .text("Дискретка")
+        .text("Мат. Логика")
         .row()
-        .text("Задать вопрос")
+        .text("Проектирование Б.П.")
         .text("Сотрудничество")
         .resized();
     await ctx.reply("Привет! Я бот для продажи вариантов по математике. \nЧто вас интересует?", {
-        reply_markup: startKeyboard
-    })
+        reply_markup: { resize_keyboard: true, keyboard: startKeyboard.build() }
+    });
 });
 
-// не уверен,что этот пункт нужен будет,но пока пусть живет
-bot.hears("Искать варианты", async (ctx) => {
-    await ctx.reply(
-        "Чтобы узнать есть ли в наличии нужный вариант напиши нужный вариант в формате 'номер вариана' 'мат логика/дискретка'"
-    );
+// Обработка запросов по "Дискретке"
+bot.hears("Дискретка", async (ctx) => {
+    const inlineKeyboard = new InlineKeyboard();
+    for (let i = 1; i <= 10; i++) {
+        inlineKeyboard.text(i.toString(), `variant_${i}`).row();
+    }
+    await ctx.reply(`Выберите вариант:`, {
+        reply_markup: inlineKeyboard
+    });
 });
 
-// вопросы по типу сотрудничества и т д
-bot.hears("Задать вопрос", async (ctx) => {
-    await ctx.reply(
-        "Пишите, отвечу на все вопросы! \nhttps://t.me/Xelacis"
-    );
+// Обработка запросов по темам которые в разработке."
+bot.hears(["Мат. Логика", "Проектирование Б.П."], async (ctx) => {
+    await ctx.reply("Данный раздел пока в разработке.");
 });
 
 
-// сотрудничество
+bot.on("callback_query:data", async (ctx) => {
+    const callbackData = ctx.callbackQuery.data;
+    const selectedVariant = data.find(item => `variant_${item.id}` === callbackData);
+
+    // Проверяем, найден ли вариант и не пустая ли ссылка
+    if (selectedVariant && selectedVariant.link) {
+        await ctx.reply(`Ваша ссылка: ${selectedVariant.link}`);
+    } else {
+        // Если вариант не найден или ссылка пустая
+        await ctx.reply('Извините, данный вариант отсутствует или недоступен.');
+    }
+
+    await ctx.answerCallbackQuery();
+});
+
+//Пункт для сотрудничества
 bot.hears("Сотрудничество", async (ctx) => {
     await ctx.reply(
-        "Если у вас есть отсутствующие варианты или желание продавать материалы по другим предметам в нашем боте, то пишите https://t.me/Xelacis \nТакже у нас есть скидки постоянным клиентам и процент за друга"
+        "Если у вас есть отсутствующие варианты или желание продавать материалы по другим предметам в нашем боте, то пишите https://t.me/Xelacis \nТакже у нас есть скидки постоянным клиентам и процент за друга."
     );
 });
 
-//проверка работы выдачи варианта по шабломному запроса (else еще не написал )
-bot.hears(
-    "1 дискретка", async (ctx) => {
-        await ctx.reply(
-            "Данный вариант есть в наличии! "
-            
-        );
-        await ctx.replyWithDocument(new InputFile("")); //сюда заливать путь к документу
-    });
-
-// обработка ошибок
+// Обработка ошибок
 bot.catch((err) => {
-    const ctx = err.ctx;
-    console.error(`Ошибка при обработке обновления ${ctx.update.update_id}:`);
-    const e = err.error;
-    if (e instanceof GrammyError) {
-      console.error("Ошибка в запросе:", e.description);
-    } else if (e instanceof HttpError) {
-      console.error("Невозможно подключится к Telegram:", e);
+    console.error(`Ошибка при обработке обновления ${err.ctx.update.update_id}:`);
+    if (err.error instanceof GrammyError) {
+        console.error("Ошибка в запросе:", err.error.description);
+    } else if (err.error instanceof HttpError) {
+        console.error("Невозможно подключиться к Telegram:", err.error);
     } else {
-      console.error("Неизвестная ошибка:", e);
+        console.error("Неизвестная ошибка:", err.error);
     }
 });
 
