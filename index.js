@@ -10,7 +10,7 @@ const data = require('./data.json');
 bot.command('start', async (ctx) => {
     const startKeyboard = new Keyboard()
         .text("Дискретка")
-        .text("Мат. Логика")
+        .text("Веб-аналитика")
         .row()
         .text("Проектирование Б.П.")
         .text("Сотрудничество")
@@ -33,7 +33,6 @@ bot.hears("Дискретка", async (ctx) => {
 
 
 
-
 bot.on("callback_query:data", async (ctx) => {
     const callbackData = ctx.callbackQuery.data;
     const selectedVariant = data.find(item => `variant_${item.id}` === callbackData);
@@ -49,10 +48,16 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.answerCallbackQuery();
 });
 
+bot.hears(["Веб-аналитика"], async (ctx) => {
+    await ctx.reply("Введите домен вашего сайта по примеру _google.ru_", { parse_mode: "Markdown" });
+});
+
+
 // Обработка запросов по темам которые в разработке."
-bot.hears(["Мат. Логика", "Проектирование Б.П."], async (ctx) => {
+bot.hears([ "Проектирование Б.П."], async (ctx) => {
     await ctx.reply("Данный раздел пока в разработке.");
 });
+
 
 //Пункт для сотрудничества
 bot.hears("Сотрудничество", async (ctx) => {
