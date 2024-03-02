@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { Bot, Keyboard, InlineKeyboard } = require("grammy");
+const { setupLinkCommand  } = require('./web-analytics.js');
 
 const bot = new Bot(process.env.BOT_API_KEY);
 
@@ -30,10 +31,7 @@ bot.hears("Дискретка", async (ctx) => {
     });
 });
 
-// Обработка запросов по темам которые в разработке."
-bot.hears(["Мат. Логика", "Проектирование Б.П."], async (ctx) => {
-    await ctx.reply("Данный раздел пока в разработке.");
-});
+
 
 
 bot.on("callback_query:data", async (ctx) => {
@@ -51,12 +49,19 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.answerCallbackQuery();
 });
 
+// Обработка запросов по темам которые в разработке."
+bot.hears(["Мат. Логика", "Проектирование Б.П."], async (ctx) => {
+    await ctx.reply("Данный раздел пока в разработке.");
+});
+
 //Пункт для сотрудничества
 bot.hears("Сотрудничество", async (ctx) => {
     await ctx.reply(
         "Если у вас есть отсутствующие варианты или желание продавать материалы по другим предметам в нашем боте, то пишите https://t.me/Xelacis \nТакже у нас есть скидки постоянным клиентам и процент за друга."
     );
 });
+
+setupLinkCommand (bot);
 
 // Обработка ошибок
 bot.catch((err) => {
@@ -69,5 +74,6 @@ bot.catch((err) => {
         console.error("Неизвестная ошибка:", err.error);
     }
 });
+
 
 bot.start();
